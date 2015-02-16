@@ -1,10 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from setuptools import setup, find_packages
+from setuptools import setup
 import os
 import subprocess
-from pip.req import parse_requirements
 from setuptools.command import easy_install
+
+
+def parse_requirements(filename):
+    return list(filter(lambda line: (line.strip())[0] != '#',
+                       [line.strip() for line in open(filename).readlines()]))
 
 
 def calculate_version():
@@ -24,7 +28,7 @@ def calculate_version():
     return version_git
 
 
-requirements = [str(ir.req) for ir in parse_requirements('requirements.txt')]
+requirements = parse_requirements('requirements.txt')
 version_git = calculate_version()
 
 
@@ -50,7 +54,7 @@ setup(
     version=version_git,
     author=u'GERSolar',
     author_email='gersolar.dev@gmail.com',
-    packages=find_packages(),
+    packages=['goesdownloader'],
     url='https://github.com/gersolar/goesdownloader',
     license='MIT',
     description=('A python library that allow to download the netcdf images '

@@ -4,3 +4,5 @@ include/
 lib/
 share/
 *.egg-info/
+*.pyc
+data/
