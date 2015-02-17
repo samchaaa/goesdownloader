@@ -7,25 +7,32 @@ from datetime import datetime, timedelta
 from netcdf import netcdf as nc
 
 
-class TestInstrument(unittest.TestCase):
+class assert_downloaded(object):
 
-    def setUp(self):
-        self.directory = 'data'
-        if not os.path.exists(self.directory):
-            os.makedirs(self.directory)
+    def __init__(self, test_case, should_download):
+        self.should_download = should_download
+        self.assertEquals = test_case.assertEquals
+        self.assertNotEquals = test_case.assertNotEquals
+        self.assertAlmostEqual = test_case.assertAlmostEqual
+        self.assertLessEqual = test_case.assertLessEqual
+        self.directory = test_case.directory
 
-    def test_download_with_datetime_filter(self):
-        should_download = lambda dt: dt.hour - 4 >= 5 and dt.hour - 4 <= 20
-        initial_files = glob.glob('%s/*.nc' % self.directory)
-        initial_size = len(initial_files)
-        files = goes.download('noaa.gvarim', 'noaaadmin', self.directory,
-                              name='goesdownloader test',
-                              datetime_filter=should_download)
+    def __enter__(self):
+        self.initial_files = glob.glob('%s/*.nc' % self.directory)
+        return self
+
+    def downloaded(self, file_list):
+        self.files = file_list
+        self.initial_files = filter(lambda f: f in self.files, self.initial_files)
+
+    def __exit__(self, type, value, traceback):
+        self.initial_size = len(self.initial_files)
         final_size = len(glob.glob('%s/*.nc' % self.directory))
+        files = self.files
         if files:
             # Test if it downloaded something.
-            self.assertNotEquals(final_size, initial_size)
-            self.assertEquals(len(files), final_size - initial_size)
+            self.assertNotEquals(final_size, self.initial_size)
+            self.assertEquals(len(files), final_size - self.initial_size)
             # Test if it calibrated the downloaded files.
             with nc.loader(files) as root:
                 counts = nc.getvar(root, 'counts_shift')
@@ -43,13 +50,38 @@ class TestInstrument(unittest.TestCase):
                 postlaunch = nc.getvar(root, 'postlaunch')
                 self.assertEquals(postlaunch.shape, (final_size, 1, 1))
         else:
-            last_image = (calibrator.get_datetime(initial_files[-1])
-                          if initial_files else datetime.utcnow())
+            last_image = (calibrator.get_datetime(self.initial_files[-1])
+                          if self.initial_files else datetime.utcnow())
             next_image = last_image + timedelta(minutes=30)
-            if should_download(next_image):
+            if self.should_download(next_image):
                 time_from_last_image = datetime.utcnow() - last_image
                 self.assertLessEqual(time_from_last_image,
                                      timedelta(minutes=30))
+
+
+class TestInstrument(unittest.TestCase):
+
+    def setUp(self):
+        self.directory = 'data'
+        if not os.path.exists(self.directory):
+            os.makedirs(self.directory)
+
+    def assert_downloaded_files(self, should_download):
+        return assert_downloaded(self, should_download)
+
+    def test_download(self):
+        with self.assert_downloaded_files(lambda dt: True) as validation:
+            files = goes.download('noaa.gvarim', 'noaaadmin', self.directory,
+                              suscription_id='55253')
+            validation.downloaded(files)
+
+    def test_download_with_datetime_filter(self):
+        should_download = lambda dt: dt.hour - 4 >= 5 and dt.hour - 4 <= 20
+        with self.assert_downloaded_files(should_download) as validation:
+            files = goes.download('noaa.gvarim', 'noaaadmin', self.directory,
+                                  name='goesdownloader test',
+                                  datetime_filter=should_download)
+            validation.downloaded(files)
 
 
 if __name__ == '__main__':
