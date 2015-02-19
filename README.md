@@ -7,3 +7,47 @@ goesdownloader
 [![Supported Python versions](https://pypip.in/py_versions/goesdownloader/badge.svg)](https://pypi.python.org/pypi/goesdownloader/) [![Stories in Ready](https://badge.waffle.io/gersolar/goesdownloader.png?label=ready&title=Ready)](https://waffle.io/gersolar/goesdownloader)
 
 A python library that made simple the download of images from a NOAA Class Suscription.
+
+Requirements
+============
+
+If you want to use this library on any GNU/Linux or OSX system you just need to execute:
+
+    $ pip install goesdownloader
+
+If you want to improve this library, you should download the [github repository](https://github.com/gersolar/goesdownloader) and execute:
+
+    $ make deploy
+
+On Ubuntu Desktop there are some other libraries not installed by default (zlibc curl libssl0.9.8 libbz2-dev libxslt-dev libxml-dev) which may need to be installed to use these library. Use the next command to automate the installation of the additional C libraries:
+
+    $ make ubuntu deploy
+
+
+Testing
+=======
+
+To test all the project you should use the command:
+
+    $ make test
+
+If you want to help us or report an issue join to us through the [GitHub issue tracker](https://github.com/gersolar/goesdownloader/issues).
+
+
+Example
+=======
+
+To download the recent images, the **download** method accepts 5 parameters:
+
+```python
+    from goesdownloader import instrument as goes 
+
+    should_download = lambda dt: dt.hour - 4 >= 5 and dt.hour - 4 <= 20
+    downloaded = instrument.download('user', 'password', 'directory', suscription_id='55253', datetime_filter=should_download)
+```
+
+
+About
+=====
+
+This software is developed by [GERSolar](http://www.gersol.unlu.edu.ar/). You can contact us to [gersolar.dev@gmail.com](mailto:gersolar.dev@gmail.com).
