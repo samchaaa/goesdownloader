@@ -43,7 +43,9 @@ To download the recent images, the **download** method accepts 5 parameters:
     from goesdownloader import instrument as goes 
 
     should_download = lambda dt: dt.hour - 4 >= 5 and dt.hour - 4 <= 20
-    downloaded = instrument.download('user', 'password', 'directory', suscription_id='55253', datetime_filter=should_download)
+    downloaded = instrument.download('user', 'password', 'directory',
+                                     suscription_id='55253',
+                                     datetime_filter=should_download)
 ```
 
 
