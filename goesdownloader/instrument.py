@@ -9,6 +9,12 @@ from datetime import datetime
 from goescalibration import instrument as calibrator
 
 
+def calculate_destiny(url, destfolder):
+    name = calibrator.short(url, 1, None)
+    dest = os.path.join(destfolder, name)
+    return dest
+
+
 class DownloadThread(threading.Thread):
     def __init__(self, queue, destfolder):
         super(DownloadThread, self).__init__()
@@ -26,9 +32,8 @@ class DownloadThread(threading.Thread):
             self.queue.task_done()
 
     def download_url(self, url):
-        # change it to a different way if you require
-        name = calibrator.short(url, 1, None)
-        dest = os.path.join(self.destfolder, name)
+        # change it to a different format if you require
+        dest = calculate_destiny(url, self.destfolder)
         print "[%s] Downloading %s -> %s"%(self.ident, url, dest)
         urllib.urlretrieve(url, dest)
         calibrator.calibrate(dest)
@@ -49,6 +54,17 @@ class DownloadManager(object):
         self.queue.join()
 
 
+def only_incompleted(url, destfolder):
+    dest = calculate_destiny(url, destfolder)
+    dest_size = os.path.getsize(dest) if os.path.isfile(dest) else 0
+    request = urllib.Request(url)
+    request.add_header('Accept-encoding', 'deflate')
+    header = urllib.urlopen(request).headers
+    sour_size = int(header['Content-Length'])
+    print dest_size, sour_size
+    return not dest_size == sour_size
+
+
 def download(username, password, folder, suscription_id=None, name=None,
              datetime_filter=None):
     noaa = noaaclass.connect(username, password)
@@ -66,6 +82,7 @@ def download(username, password, folder, suscription_id=None, name=None,
         get_datetime = lambda f: datetime.strptime(calibrator.short(f),
                                                    "%Y.%j.%H%M%S")
         urls = filter(lambda f: datetime_filter(get_datetime(f)), urls)
+    urls = filter(lambda u: only_incompleted(u, folder), urls)
     map(manager.queue.put, urls)
     manager.start()
     manager.join()
