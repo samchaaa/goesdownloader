@@ -54,6 +54,7 @@ class DownloadManager(object):
     def join(self):
         self.queue.join()
 
+
 def localsize(localfile):
     with open(localfile, 'rb') as f:
         size = len(f.read())
@@ -63,15 +64,15 @@ def localsize(localfile):
 def only_incompleted(url, destfolder):
     dest = calculate_destiny(url, destfolder)
     completed = False
-    if os.path.isfile(dest):
+    if os.path.exists(dest):
         try:
             with nc.loader(dest) as root:
                 nc.getvar(root, 'data')
                 nc.getvar(root, 'lat')
                 nc.getvar(root, 'lon')
             completed = True
-        except Exception, e:
-            print e
+        except (OSError, IOError, Exception):
+            print "The file %s was broken." % dest
     return not completed
 
 
