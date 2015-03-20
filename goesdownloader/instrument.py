@@ -2,11 +2,12 @@ from noaaclass import noaaclass
 import itertools
 import sys
 import os
-import urllib
+from urllib import urlretrieve
 import threading
 from Queue import Queue
 from datetime import datetime
 from goescalibration import instrument as calibrator
+from netcdf import netcdf as nc
 
 
 def calculate_destiny(url, destfolder):
@@ -27,7 +28,7 @@ class DownloadThread(threading.Thread):
             url = self.queue.get()
             try:
                 self.download_url(url)
-            except Exception,e:
+            except Exception, e:
                 print "   Error: %s"%e
             self.queue.task_done()
 
@@ -35,7 +36,7 @@ class DownloadThread(threading.Thread):
         # change it to a different format if you require
         dest = calculate_destiny(url, self.destfolder)
         print "[%s] Downloading %s -> %s"%(self.ident, url, dest)
-        urllib.urlretrieve(url, dest)
+        urlretrieve(url, dest)
         calibrator.calibrate(dest)
 
 
@@ -53,16 +54,25 @@ class DownloadManager(object):
     def join(self):
         self.queue.join()
 
+def localsize(localfile):
+    with open(localfile, 'rb') as f:
+        size = len(f.read())
+    return size
+
 
 def only_incompleted(url, destfolder):
     dest = calculate_destiny(url, destfolder)
-    dest_size = os.path.getsize(dest) if os.path.isfile(dest) else 0
-    request = urllib.Request(url)
-    request.add_header('Accept-encoding', 'deflate')
-    header = urllib.urlopen(request).headers
-    sour_size = int(header['Content-Length'])
-    print dest_size, sour_size
-    return not dest_size == sour_size
+    completed = False
+    if os.path.isfile(dest):
+        try:
+            with nc.loader(dest) as root:
+                nc.getvar(root, 'data')
+                nc.getvar(root, 'lat')
+                nc.getvar(root, 'lon')
+            completed = True
+        except Exception, e:
+            print e
+    return not completed
 
 
 def download(username, password, folder, suscription_id=None, name=None,

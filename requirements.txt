@@ -1,3 +1,4 @@
 noaaclass==0.0.14
 pytz==2014.4
 goescalibration==0.0.4
+netcdf==0.0.30
