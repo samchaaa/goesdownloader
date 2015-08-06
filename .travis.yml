@@ -9,7 +9,9 @@ addons:
     - libxslt1-dev
     - libxml2-dev
     - python-gevent
-    - libhdf5-8
+    - libhdf5-serial-dev
+    - netcdf-bin
+    - libnetcdf-dev
 language: python
 python:
   - 2.6
