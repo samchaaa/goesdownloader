@@ -8,6 +8,16 @@ from Queue import Queue
 from datetime import datetime
 from goescalibration import instrument as calibrator
 from netcdf import netcdf as nc
+import logging
+import logging.handlers
+
+
+logger = logging.getLogger('goesdownloader')
+logger.setLevel(logging.INFO)
+handler = logging.handlers.RotatingFileHandler(
+    "goesdownloader.out", maxBytes=20, backupCount=5)
+logger.addHandler(handler)
+
 
 
 def calculate_destiny(url, destfolder):
@@ -29,14 +39,23 @@ class DownloadThread(threading.Thread):
             try:
                 self.download_url(url)
             except Exception, e:
-                print "   Error: %s"%e
+                logger.error("   Error: %s" % e)
             self.queue.task_done()
 
     def download_url(self, url):
         # change it to a different format if you require
-        dest = calculate_destiny(url, self.destfolder)
-        print "[%s] Downloading %s -> %s"%(self.ident, url, dest)
-        urlretrieve(url, dest)
+        ftp, http = url
+        dest = calculate_destiny(http, self.destfolder)
+        msg = "[%s] %s %s -> %s"
+        logger.info(msg % ("Downloading", self.ident, ftp, dest))
+        try:
+            # Try ftp...
+            urlretrieve(ftp, dest)
+        except Exception:
+            logger.info(msg % ("Alternative downloading", self.ident,
+                                ftp, dest))
+            # Try http...
+            urlretrieve(http, dest)
         calibrator.calibrate(dest)
 
 
@@ -72,7 +91,7 @@ def only_incompleted(url, destfolder):
                 nc.getvar(root, 'lon')
             completed = True
         except (OSError, IOError, Exception):
-            print "The file %s was broken." % dest
+            logger.error("The file %s was broken." % dest)
     return not completed
 
 
@@ -86,17 +105,20 @@ def download(username, password, folder, suscription_id=None, name=None,
                sus['name'] == name)
     suscription = filter(lambda s: compare(s), suscriptions)[0]
     orders = filter(lambda o: o['status'] == 'ready', suscription['orders'])
-    files = map(lambda o: o['files']['http'], orders)
-    urls = filter(lambda filename: filename[-3:] == '.nc',
-                  itertools.chain(*files))
+    print len(orders)
+    http_files = map(lambda o: o['files']['http'], orders)
+    ftp_files = map(lambda o: o['files']['ftp'], orders)
+    files = zip(itertools.chain(*ftp_files), itertools.chain(*http_files))
+    urls = filter(lambda filename: filename[0][-3:] == '.nc',
+                  files)
     if datetime_filter:
         get_datetime = lambda f: datetime.strptime(calibrator.short(f),
                                                    "%Y.%j.%H%M%S")
-        urls = filter(lambda f: datetime_filter(get_datetime(f)), urls)
-    urls = filter(lambda u: only_incompleted(u, folder), urls)
+        urls = filter(lambda f: datetime_filter(get_datetime(f[0])), urls)
+    urls = filter(lambda u: only_incompleted(u[0], folder), urls)
     map(manager.queue.put, urls)
     manager.start()
     manager.join()
-    downloaded = map(lambda u: "%s/%s" % (folder, calibrator.short(u, 1, None)),
+    downloaded = map(lambda u: "%s/%s" % (folder, calibrator.short(u[1], 1, None)),
                      urls)
     return downloaded
