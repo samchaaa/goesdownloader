@@ -15,10 +15,12 @@ ubuntu:
 	@ sudo apt-get -y install zlibc libssl0.9.8 libbz2-dev libxslt1-dev libxml2-dev python-gevent
 	@ echo "[ assume       ] ubuntu distribution"
 
+virtualenv:
+	@ echo "[ installing   ] $(VIRTUALENV)"
+	@ sudo $(FIRST_EASYINSTALL) virtualenv
+
 bin/activate: requirements.txt
 	@ echo "[ using        ] $(PYTHONPATH)"
-	@ echo "[ installing   ] $(VIRTUALENV)"
-	@ (sudo $(FIRST_EASYINSTALL) virtualenv 2>&1) >> tracking.log
 	@ echo "[ creating     ] $(VIRTUALENV) with no site packages"
 	@ ($(PYTHONLIBS) $(VIRTUALENV) --python=$(PYTHONPATH) --no-site-packages . 2>&1) >> tracking.log
 	@ echo "[ installing   ] $(PIP) inside $(VIRTUALENV)"
