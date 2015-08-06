@@ -9,6 +9,7 @@ addons:
     - libxslt1-dev
     - libxml2-dev
     - python-gevent
+    - libhdf5-8
 language: python
 python:
   - 2.6
