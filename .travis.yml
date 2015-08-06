@@ -3,6 +3,7 @@ addons:
   apt:
     packages:
     - zlibc
+    - curl
     - libssl0.9.8
     - libbz2-dev 
     - libxslt1-dev
