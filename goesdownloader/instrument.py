@@ -105,7 +105,6 @@ def download(username, password, folder, suscription_id=None, name=None,
                sus['name'] == name)
     suscription = filter(lambda s: compare(s), suscriptions)[0]
     orders = filter(lambda o: o['status'] == 'ready', suscription['orders'])
-    print len(orders)
     http_files = map(lambda o: o['files']['http'], orders)
     ftp_files = map(lambda o: o['files']['ftp'], orders)
     files = zip(itertools.chain(*ftp_files), itertools.chain(*http_files))
