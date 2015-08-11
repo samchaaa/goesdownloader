@@ -53,7 +53,7 @@ class DownloadThread(threading.Thread):
             urlretrieve(ftp, dest)
         except Exception:
             logger.info(msg % ("Alternative downloading", self.ident,
-                                ftp, dest))
+                                http, dest))
             # Try http...
             urlretrieve(http, dest)
         calibrator.calibrate(dest)
