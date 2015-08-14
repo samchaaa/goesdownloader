@@ -15,7 +15,7 @@ import logging.handlers
 logger = logging.getLogger('goesdownloader')
 logger.setLevel(logging.INFO)
 handler = logging.handlers.RotatingFileHandler(
-    "goesdownloader.out", maxBytes=20, backupCount=5)
+    "log_goesdownloader.out", maxBytes=20, backupCount=5)
 logger.addHandler(handler)
 
 
