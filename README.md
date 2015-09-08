@@ -19,7 +19,7 @@ If you want to improve this library, you should download the [github repository]
 
     $ make virtualenv deploy
 
-On Ubuntu Desktop there are some other libraries not installed by default (zlibc curl libssl0.9.8 libbz2-dev libxslt-dev libxml-dev) which may need to be installed to use these library. Use the next command to automate the installation of the additional C libraries:
+On Ubuntu Desktop there are some other libraries not installed by default (zlibc curl libssl1.0.0 libbz2-dev libxslt-dev libxml-dev) which may need to be installed to use these library. Use the next command to automate the installation of the additional C libraries:
 
     $ make ubuntu virtualenv deploy
 
